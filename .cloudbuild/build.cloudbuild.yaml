@@ -1,0 +1,40 @@
+steps:
+- name: 'gcr.io/cloud-builders/git'
+  entrypoint: bash
+  args:
+    - "-c"
+    - |
+      git config --global init.defaultBranch main
+      git config --global user.email "899101821252@cloudbuild.gserviceaccount.com"
+      git config --global user.name "Cloud Build Service Account"
+
+      # Install Node
+      apt install curl
+      curl -sL https://deb.nodesource.com/setup_16.x | bash -
+      apt-get install -y nodejs
+      apt-get install -y npm
+
+      # Install node modules
+      npm install npx semantic-release
+      npm install @semantic-release/git @semantic-release/changelog @semantic-release/commit-analyzer
+
+      # Run semantic-release and capture the output
+      npx semantic-release -d false > release.txt
+
+      cat release.txt
+
+      # skim through the output and fetch the computed release version
+      while read line; do
+        if [[ $line =~ "Prepared Git release" ]]; then
+          version=$(echo $line | sed "s/\(.*\)Prepared Git release: \(.*\)$/\2/")
+        fi
+      done < release.txt
+
+      echo "Computed new version $version"
+
+      # Create and write the latest versio to the .version file
+      echo $version > .version
+
+      git add .version
+      git commit -m "docs: updating the new semantic version"
+      git push --set-upstream origin main
