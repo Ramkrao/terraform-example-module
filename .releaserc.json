@@ -2,7 +2,8 @@
   "dryRun": false,
   "ci": false,
   "branches": [
-    "main"
+    "main",
+    "master"
   ],
   "tagFormat": "${version}",
   "plugins": [
